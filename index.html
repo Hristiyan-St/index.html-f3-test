@@ -271,4 +271,121 @@
       { question: "Какво е времето за отваряне на водонепроницаеми врати, управлявани от мостика?", options: ["10 сек.", "20 сек.", "30 сек.", "60 сек."], correct: 3 },
       { question: "Колко напълно обучени екипажа трябва да има на кораба, за да работят с водонепроницаемите врати?", options: ["Един.", "Два.", "Три.", "Четири."], correct: 3 },
       { question: "Колко дежурни лодки трябва да има на товарен кораб с дължина по-голяма от 85 метра?", options: ["Една.", "Две.", "Три.", "Четири."], correct: 3 },
-      { question: "Колко време трябва да
+      
+];
+        shuffleArray(allQuestions);
+    allQuestions.forEach(q => {
+      const correctText = q.options[q.correct];
+      shuffleArray(q.options);
+      q.correct = q.options.indexOf(correctText);
+    });
+
+    const selectedQuestions = allQuestions;
+    let currentIndex = 0;
+    let userAnswers = Array(selectedQuestions.length).fill(null);
+
+    function renderNavigation() {
+      const navDiv = document.getElementById("navigation");
+      navDiv.innerHTML = "";
+      for (let i = 0; i < selectedQuestions.length; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i + 1;
+        btn.className = "nav-button";
+
+        if (i === currentIndex) btn.classList.add("active");
+        if (userAnswers[i] !== null) {
+          const isCorrect = userAnswers[i] === selectedQuestions[i].options[selectedQuestions[i].correct];
+          btn.classList.add(isCorrect ? "correct" : "incorrect");
+        }
+
+        btn.onclick = () => {
+          currentIndex = i;
+          renderQuestion();
+        };
+        navDiv.appendChild(btn);
+      }
+    }
+
+    function renderQuestion() {
+      renderNavigation();
+      const q = selectedQuestions[currentIndex];
+      const container = document.getElementById("quiz-container");
+      container.innerHTML = "";
+
+      const box = document.createElement("div");
+      box.className = "question-box";
+
+      const qText = document.createElement("div");
+      qText.className = "question-text";
+      qText.textContent = (currentIndex + 1) + ". " + q.question;
+      box.appendChild(qText);
+
+      const options = [...q.options];
+      const labels = ['A', 'B', 'C', 'D'];
+
+      options.forEach((opt, index) => {
+        const btn = document.createElement("button");
+        btn.textContent = `${labels[index]}. ${opt}`;
+        btn.className = "option";
+
+        if (userAnswers[currentIndex] !== null) {
+          btn.classList.add("disabled");
+          if (opt === q.options[q.correct]) {
+            btn.classList.add("correct");
+          } else if (opt === userAnswers[currentIndex]) {
+            btn.classList.add("incorrect");
+          }
+        } else {
+          btn.onclick = () => {
+            userAnswers[currentIndex] = opt;
+            renderQuestion();
+            updateScoreboard();
+          };
+        }
+
+        box.appendChild(btn);
+      });
+
+      const nextButton = document.createElement("button");
+      nextButton.className = "next-button";
+      nextButton.textContent = currentIndex === selectedQuestions.length - 1 ? "Завърши теста" : "Следващ въпрос";
+      nextButton.onclick = () => {
+        if (currentIndex === selectedQuestions.length - 1) {
+          calculateResults();
+        } else {
+          currentIndex++;
+          renderQuestion();
+        }
+      };
+      box.appendChild(nextButton);
+
+      container.appendChild(box);
+    }
+
+    function updateScoreboard() {
+      const scoreboard = document.getElementById("scoreboard");
+      let correct = 0, incorrect = 0;
+      userAnswers.forEach((ans, idx) => {
+        if (ans !== null) {
+          const correctAns = selectedQuestions[idx].options[selectedQuestions[idx].correct];
+          if (ans === correctAns) correct++;
+          else incorrect++;
+        }
+      });
+      scoreboard.textContent = `Верен: ${correct} | Грешен: ${incorrect}`;
+    }
+
+    function calculateResults() {
+      let correctCount = 0;
+      userAnswers.forEach((answer, index) => {
+        if (answer === selectedQuestions[index].options[selectedQuestions[index].correct]) {
+          correctCount++;
+        }
+      });
+      alert("Вие отговорихте правилно на " + correctCount + " от " + selectedQuestions.length + " въпроса.");
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
